@@ -55,7 +55,7 @@ export const Camera = () => {
     return (
         <div className="camera-container absolute top-0 right-0 m-4 z-10">
             <Webcam
-                audio={true}
+                audio={false}
                 ref={webcamRef}
                 screenshotFormat="image/webp"
                 videoConstraints={constraints}

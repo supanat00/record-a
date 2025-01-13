@@ -10,10 +10,10 @@ export default async function Live({ params }: { params: Params }) {
   const videoSrc = `/videos/${String(roomId).padStart(4, "0")}.mp4`;
 
   return (
-    <div className="relative flex flex-col justify-center items-center h-screen bg-black">
-      {/* Canvas for screen recording */}
-      <canvas id="recordingCanvas" className="absolute top-0 left-0 w-full h-full z-10"></canvas>
-      
+    <div className="relative flex flex-col justify-center items-center h-screen bg-black">     
+      {/*ScreenRecorder */}
+      <ScreenRecorder videoSrc={videoSrc} options={{ frameRate: 60, mimeType: "video/webm", audio: true }} />
+
       {/* Incoming Call Screen */}
       <IncomingCallScreen imageSrc={imageSrc} videoSrc={videoSrc} />
 
@@ -22,8 +22,6 @@ export default async function Live({ params }: { params: Params }) {
 
       {/* Camera */}
       <Camera />
-      {/*ScreenRecorder */}
-      <ScreenRecorder videoSrc={videoSrc} options={{ frameRate: 60, mimeType: "video/webm", audio: true }} />
     </div>
   );
 }

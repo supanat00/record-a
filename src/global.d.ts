@@ -1,6 +1,6 @@
+// เพิ่มการขยายชนิดของ HTMLVideoElement
 declare global {
-    interface HTMLVideoElement {
-      captureStream(frameRate?: number): MediaStream;
-    }
+  interface HTMLVideoElement {
+    captureStream: () => MediaStream;
   }
-  
+}
