@@ -1,6 +1,5 @@
-import { IncomingCallScreen } from "@/components/IncomingCallScreen";
-import { Camera } from "@/components/Camera";
-import ScreenRecorder from "@/components/ScreenRecorder";
+// pages/Live.tsx
+import CanvasContainer from "@/components/CanvasContainer";
 
 type Params = Promise<{ roomId: string }>;
 
@@ -11,17 +10,11 @@ export default async function Live({ params }: { params: Params }) {
 
   return (
     <div className="relative flex flex-col justify-center items-center h-screen bg-black">
-      {/* Incoming Call Screen */}
-      <IncomingCallScreen imageSrc={imageSrc} videoSrc={videoSrc} />
-
+      {/* CanvasContainer สำหรับการวาดทั้ง IncomingCallScreen และ Camera */}
+      <CanvasContainer imageSrc={imageSrc} videoSrc={videoSrc} />
+      
       {/* Live Room Header */}
       <h1 className="absolute text-2xl font-bold text-white z-10">Live Room: {roomId}</h1>
-
-      {/* Camera */}
-      <Camera />
-
-      {/* Screen Recorder */}
-      <ScreenRecorder />
     </div>
   );
 }

@@ -1,123 +1,85 @@
-"use client";
-
-import { useState, useRef } from "react";
-
-type RecorderOptions = {
-  frameRate?: number;
-  mimeType?: string;
-  audio?: boolean;
-  preferCurrentTab?:boolean;
-  audioBitsPerSecond?: 2_500_000,
-  videoBitsPerSecond?: 2_500_000,
-};
+'use client'
+import React, { useRef, useState, useEffect } from "react";
 
 type ScreenRecorderProps = {
-  options?: RecorderOptions;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  setIsRecording: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
-  options = {
-    frameRate: 60,
-    mimeType: "video/webm",
-    audio: true,
-    preferCurrentTab: true,
-  },
-}) => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [videoURL, setVideoURL] = useState<string | null>(null);
-
+const ScreenRecorder: React.FC<ScreenRecorderProps> = ({ canvasRef, setIsRecording }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+  const [isRecording, setIsRecordingState] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
-  const startRecording = async () => {
-    try {
-      // รับ video stream
-      const videoStream = await navigator.mediaDevices.getDisplayMedia({
-        video: { frameRate: options.frameRate },
-        audio: options.audio,
-        preferCurrentTab: options.preferCurrentTab, // เพิ่มส่วนนี้
-      } as DisplayMediaStreamOptions); // บังคับข้ามการตรวจสอบ
-  
-      // รับ audio stream
-      const audioStream = options.audio
-        ? await navigator.mediaDevices.getUserMedia({ audio: options.audio, })
-        : null;
-  
-      // รวม video และ audio stream (ถ้ามี)
-      const combinedStream = new MediaStream([
-        ...videoStream.getTracks(),
-        ...(audioStream ? audioStream.getTracks() : []),
-      ]);
-  
-      streamRef.current = combinedStream;
-  
-      const mediaRecorder = new MediaRecorder(combinedStream, {
-        mimeType: options.mimeType,
-        audioBitsPerSecond: options.audioBitsPerSecond,
-        videoBitsPerSecond: options.videoBitsPerSecond,
-      });
-  
-      let chunks: Blob[] = [];
-      mediaRecorderRef.current = mediaRecorder;
-  
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) chunks.push(event.data);
-      };
-  
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: options.mimeType });
-        const url = URL.createObjectURL(blob);
-        setVideoURL(url);
-        chunks = []
-      };
-  
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (err) {
-      console.error("Error starting screen recording:", err);
-    }
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    const stream = canvasRef.current.captureStream(30); // 30 FPS capture from canvas
+    mediaRecorderRef.current = new MediaRecorder(stream);
+
+    mediaRecorderRef.current.ondataavailable = (event) => {
+      setRecordedChunks((prev) => [...prev, event.data]);
+    };
+
+    mediaRecorderRef.current.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+      setVideoUrl(url);
+    };
+  }, [canvasRef, recordedChunks]);
+
+  const startRecording = () => {
+    if (!mediaRecorderRef.current) return;
+    setRecordedChunks([]);
+    mediaRecorderRef.current.start();
+    setIsRecordingState(true);
+    setIsRecording(true);
   };
 
   const stopRecording = () => {
-    mediaRecorderRef.current?.stop();
-    streamRef.current?.getTracks().forEach((track) => track.stop());
+    if (!mediaRecorderRef.current) return;
+    mediaRecorderRef.current.stop();
+    setIsRecordingState(false);
     setIsRecording(false);
   };
 
-  return (
-    <div className="absolute bottom-10 z-10 flex flex-col items-center space-y-4">
-      {!isRecording ? (
-        <button
-          onClick={startRecording}
-          className="px-6 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition"
-        >
-          Start Recording
-        </button>
-      ) : (
-        <button
-          onClick={stopRecording}
-          className="px-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
-        >
-          Stop Recording
-        </button>
-      )}
+  const downloadVideo = () => {
+    if (!videoUrl) return;
 
-      {videoURL && (
-        <div className="mt-4">
-          <video
-            src={videoURL}
-            controls
-            className="w-full max-w-lg rounded-lg shadow-lg"
-          />
-          <a
-            href={videoURL}
-            download="video.webm"
-            className="mt-2 inline-block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition"
-          >
-            Download Video
-          </a>
-        </div>
-      )}
+    const a = document.createElement("a");
+    a.href = videoUrl;
+    a.download = "recording.webm";
+    a.click();
+  };
+
+  return (
+    <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20">
+      <div className="flex flex-col items-center space-y-2">
+        <button
+          onClick={isRecording ? stopRecording : startRecording}
+          className="px-4 py-2 bg-red-500 text-white rounded-md"
+        >
+          {isRecording ? "Stop Recording" : "Start Recording"}
+        </button>
+
+        {/* แสดงปุ่มดาวน์โหลดเมื่อบันทึกเสร็จ */}
+        {videoUrl && (
+          <div>
+            <video
+              src={videoUrl}
+              controls
+              className="w-full max-w-sm border-2 border-gray-400 rounded-md"
+            />
+            <button
+              onClick={downloadVideo}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md mt-2"
+            >
+              Download Video
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
