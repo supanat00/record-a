@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const Menu = () => {
   return (
-    <div className="p-8 bg-blue-200 rounded-lg border-2 border-white w-full max-w-sm">
+    <div className="p-8 bg-blue-200 rounded-lg border-2 border-white w-full max-w-lg">
       {/* กรอบหัวข้อ */}
       <div className="text-center text-white text-xl font-bold mb-4">
         เลือกศิลปินที่ชื่นชอบ
