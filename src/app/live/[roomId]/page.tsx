@@ -23,7 +23,7 @@ export default async function Live({ params }: { params: Params }) {
       {/* Camera */}
       <Camera />
       {/*ScreenRecorder */}
-      <ScreenRecorder videoSrc={videoSrc} />
+      <ScreenRecorder videoSrc={videoSrc} options={{ frameRate: 60, mimeType: "video/webm", audio: true }} />
     </div>
   );
 }

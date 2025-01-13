@@ -1,58 +1,42 @@
-'use client'
+"use client"
 import { useState, useRef, useEffect } from "react";
 
-type RecorderOptions = {
-  frameRate?: number;
-  mimeType?: string;
-  audio?: boolean;
-  preferCurrentTab?: boolean;
-  audioBitsPerSecond?: 2_500_000;
-  videoBitsPerSecond?: 2_500_000;
-};
-
-type ScreenRecorderProps = {
-  options?: RecorderOptions;
-  videoSrc: string; // เพิ่ม prop เพื่อรับ src ของวิดีโอ
-};
-
-export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
-  videoSrc,
-  options = {
-    frameRate: 60,
-    mimeType: "video/webm",
-    audio: true,
-    preferCurrentTab: true,
-  },
-}) => {
+export const ScreenRecorder = ({ videoSrc, options }) => {
   const [isRecording, setIsRecording] = useState(false);
-  const [videoURL, setVideoURL] = useState<string | null>(null);
+  const [videoURL, setVideoURL] = useState(null);
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null); // Reference to the canvas
-  const ctxRef = useRef<CanvasRenderingContext2D | null>(null); // Context to draw on canvas
-  const videoRef = useRef<HTMLVideoElement | null>(null); // Reference to video element
+  const mediaRecorderRef = useRef(null);
+  const canvasRef = useRef(null); // Reference to the canvas
+  const ctxRef = useRef(null); // Context to draw on canvas
+  const videoRef = useRef(null); // Reference to video element
 
   // Initialize the canvas drawing context
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctxRef.current = ctx;
+// Initial setup for canvas size
+useEffect(() => {
+  const canvas = canvasRef.current;
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctxRef.current = ctx;
 
-        // เริ่มวาดบางอย่างบน canvas
-        const draw = () => {
-          const video = videoRef.current;
-          if (video && ctxRef.current) {
-            ctxRef.current.clearRect(0, 0, canvas.width, canvas.height); // ลบภาพเดิม
-            ctxRef.current.drawImage(video, 0, 0, canvas.width, canvas.height); // วาดวิดีโอใน canvas
-          }
-          requestAnimationFrame(draw); // เรียกซ้ำเพื่อวาดในเฟรมถัดไป
-        };
-        draw();
+      const video = videoRef.current;
+      if (video) {
+        canvas.width = video.videoWidth;  // ตั้งค่าขนาดของ canvas ให้ตรงกับขนาดวิดีโอ
+        canvas.height = video.videoHeight;
       }
+
+      // Start drawing video frames
+      const draw = () => {
+        if (video && ctxRef.current) {
+          ctxRef.current.clearRect(0, 0, canvas.width, canvas.height); // clear the previous frame
+          ctxRef.current.drawImage(video, 0, 0, canvas.width, canvas.height); // Draw the video onto the canvas
+        }
+        requestAnimationFrame(draw); // Request next frame
+      };
+      draw();
     }
-  }, [videoSrc]);
+  }
+}, [videoSrc]);
 
   const startRecording = async () => {
     try {
@@ -77,7 +61,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
       await videoElement.play();
   
       const audioStream = options.audio ? videoElement.captureStream().getAudioTracks() : null;
-      const combinedStream = new MediaStream([
+      const combinedStream = new MediaStream([ 
         ...videoStream.getTracks(),
         ...(audioStream ? audioStream : []),
       ]);
@@ -88,7 +72,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
         videoBitsPerSecond: options.videoBitsPerSecond,
       });
   
-      let chunks: Blob[] = [];
+      let chunks = [];
       mediaRecorderRef.current = mediaRecorder;
   
       mediaRecorder.ondataavailable = (event) => {
@@ -108,9 +92,6 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
       console.error("Error starting canvas recording:", err);
     }
   };
-  
-  
-  
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
@@ -156,7 +137,6 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
 
       {/* Canvas Element */}
       <canvas ref={canvasRef} width={640} height={480} className="hidden" />
-      {/* The canvas can be made visible by adjusting the class if you want it on screen */}
 
       {/* Video Element */}
       <video
