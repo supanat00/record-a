@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useRef,} from "react";
+import { useState, useRef } from "react";
 
 type RecorderOptions = {
   frameRate?: number;
   mimeType?: string;
   audio?: boolean;
-  preferCurrentTab?: boolean;
-  audioBitsPerSecond?: number;
-  videoBitsPerSecond?: number;
+  preferCurrentTab?:boolean;
+  audioBitsPerSecond?: 2_500_000,
+  videoBitsPerSecond?: 2_500_000,
 };
 
 type ScreenRecorderProps = {
@@ -21,8 +21,6 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
     mimeType: "video/webm",
     audio: true,
     preferCurrentTab: true,
-    audioBitsPerSecond: 2_500_000,
-    videoBitsPerSecond: 2_500_000,
   },
 }) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -30,21 +28,24 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const startRecording = async () => {
     try {
-      const canvas = canvasRef.current;
-      if (!canvas) throw new Error("Canvas not found");
+      // รับ video stream
+      const videoStream = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: options.frameRate },
+        audio: options.audio,
+        preferCurrentTab: options.preferCurrentTab, // เพิ่มส่วนนี้
+      } as DisplayMediaStreamOptions); // บังคับข้ามการตรวจสอบ
   
-      // เริ่มการบันทึกจาก canvas
-      const canvasStream = canvas.captureStream(30); // 30 FPS
+      // รับ audio stream
       const audioStream = options.audio
-        ? await navigator.mediaDevices.getUserMedia({ audio: true })
+        ? await navigator.mediaDevices.getUserMedia({ audio: options.audio, })
         : null;
   
+      // รวม video และ audio stream (ถ้ามี)
       const combinedStream = new MediaStream([
-        ...canvasStream.getTracks(),
+        ...videoStream.getTracks(),
         ...(audioStream ? audioStream.getTracks() : []),
       ]);
   
@@ -56,25 +57,26 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
         videoBitsPerSecond: options.videoBitsPerSecond,
       });
   
+      let chunks: Blob[] = [];
       mediaRecorderRef.current = mediaRecorder;
   
-      const chunks: Blob[] = [];
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunks.push(event.data);
       };
   
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunks, { type: options.mimeType });
-        setVideoURL(URL.createObjectURL(blob));
+        const url = URL.createObjectURL(blob);
+        setVideoURL(url);
+        chunks = []
       };
   
       mediaRecorder.start();
       setIsRecording(true);
     } catch (err) {
-      console.error("Error starting recording:", err);
+      console.error("Error starting screen recording:", err);
     }
   };
-  
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
@@ -83,46 +85,39 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
   };
 
   return (
-    <div className="relative flex flex-col items-center">
-      <canvas
-        ref={canvasRef}
-        className="absolute top-0 left-0 w-full h-full"
-        style={{ pointerEvents: "none" }}
-      ></canvas>
-      <div className="absolute bottom-10 flex flex-col items-center space-y-4">
-        {!isRecording ? (
-          <button
-            onClick={startRecording}
-            className="px-6 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition"
-          >
-            Start Recording
-          </button>
-        ) : (
-          <button
-            onClick={stopRecording}
-            className="px-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
-          >
-            Stop Recording
-          </button>
-        )}
+    <div className="absolute bottom-10 z-10 flex flex-col items-center space-y-4">
+      {!isRecording ? (
+        <button
+          onClick={startRecording}
+          className="px-6 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition"
+        >
+          Start Recording
+        </button>
+      ) : (
+        <button
+          onClick={stopRecording}
+          className="px-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+        >
+          Stop Recording
+        </button>
+      )}
 
-        {videoURL && (
-          <div className="mt-4">
-            <video
-              src={videoURL}
-              controls
-              className="w-full max-w-lg rounded-lg shadow-lg"
-            />
-            <a
-              href={videoURL}
-              download="video.webm"
-              className="mt-2 inline-block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition"
-            >
-              Download Video
-            </a>
-          </div>
-        )}
-      </div>
+      {videoURL && (
+        <div className="mt-4">
+          <video
+            src={videoURL}
+            controls
+            className="w-full max-w-lg rounded-lg shadow-lg"
+          />
+          <a
+            href={videoURL}
+            download="video.webm"
+            className="mt-2 inline-block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition"
+          >
+            Download Video
+          </a>
+        </div>
+      )}
     </div>
   );
 };
