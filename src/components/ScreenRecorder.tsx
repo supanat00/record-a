@@ -34,62 +34,47 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
 
   const startRecording = async () => {
     try {
-      const videoStream = await navigator.mediaDevices.getDisplayMedia({
-        video: { frameRate: options.frameRate },
-        audio: options.audio,
-        preferCurrentTab: options.preferCurrentTab,
-      } as DisplayMediaStreamOptions);
-
+      const canvas = canvasRef.current;
+      if (!canvas) throw new Error("Canvas not found");
+  
+      // เริ่มการบันทึกจาก canvas
+      const canvasStream = canvas.captureStream(30); // 30 FPS
       const audioStream = options.audio
         ? await navigator.mediaDevices.getUserMedia({ audio: true })
         : null;
-
+  
       const combinedStream = new MediaStream([
-        ...videoStream.getTracks(),
+        ...canvasStream.getTracks(),
         ...(audioStream ? audioStream.getTracks() : []),
       ]);
-
+  
       streamRef.current = combinedStream;
-
+  
       const mediaRecorder = new MediaRecorder(combinedStream, {
         mimeType: options.mimeType,
         audioBitsPerSecond: options.audioBitsPerSecond,
         videoBitsPerSecond: options.videoBitsPerSecond,
       });
-
+  
       mediaRecorderRef.current = mediaRecorder;
-
+  
       const chunks: Blob[] = [];
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunks.push(event.data);
       };
-
+  
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunks, { type: options.mimeType });
         setVideoURL(URL.createObjectURL(blob));
       };
-
+  
       mediaRecorder.start();
       setIsRecording(true);
-
-      // วาด canvas
-      const canvas = canvasRef.current;
-      const ctx = canvas?.getContext("2d");
-      if (canvas && ctx) {
-        canvas.width = 1280;
-        canvas.height = 720;
-        const draw = () => {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
-          ctx.fillRect(50, 50, 200, 100); // วาดตัวอย่างสี่เหลี่ยม
-          if (isRecording) requestAnimationFrame(draw);
-        };
-        draw();
-      }
     } catch (err) {
-      console.error("Error starting screen recording:", err);
+      console.error("Error starting recording:", err);
     }
   };
+  
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
