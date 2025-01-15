@@ -8,10 +8,10 @@ export const Fakecall: React.FC<VideoPlayerProps> = ({ videoSrc }) => {
       <video
         src={videoSrc}
         className="w-full h-full object-cover"
-        playsInline  
-        autoPlay                  
-        >
-        </video>
+        playsInline
+        autoPlay
+      >
+      </video>
     </div>
   );
 };

@@ -1,21 +1,20 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import Webcam from "react-webcam";
 
 const videoConstraints = {
     width: 1920,
     height: 1080,
-    facingMode: { exact: "user" }
+    facingMode: { exact: "user" },
 };
 
 const fallbackConstraints = {
     width: 1920,
     height: 1080,
-    facingMode: { exact: "environment" }
+    facingMode: { exact: "environment" },
 };
 
-export const Camera = () => {
+export const Camera = forwardRef<HTMLVideoElement>((_, ref) => {
     const [constraints, setConstraints] = useState(videoConstraints);
     const [mirrored, setMirrored] = useState(false);
     const [isPortrait, setIsPortrait] = useState(true);
@@ -28,7 +27,7 @@ export const Camera = () => {
                 const mediaStream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
                 setConstraints(videoConstraints);
                 setMirrored(true);
-                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream.getTracks().forEach((track) => track.stop());
             } catch (error) {
                 setConstraints(fallbackConstraints);
                 setMirrored(true);
@@ -52,6 +51,9 @@ export const Camera = () => {
         };
     }, []);
 
+    // ส่ง `video` element กลับผ่าน `ref`
+    useImperativeHandle(ref, () => webcamRef.current?.video as HTMLVideoElement);
+
     return (
         <div className="camera-container absolute top-0 right-0 m-4 z-10">
             <Webcam
@@ -60,14 +62,14 @@ export const Camera = () => {
                 screenshotFormat="image/webp"
                 videoConstraints={constraints}
                 mirrored={mirrored}
-                className={isPortrait ? 'portraitWebcam' : 'landscapeWebcam'}
+                className={isPortrait ? "portraitWebcam" : "landscapeWebcam"}
                 style={{
-                    width: "120px",  // กำหนดความกว้างของกรอบลดลง 20%
-                    height: "160px", // กำหนดความสูงของกรอบลดลง 20%
-                    objectFit: "cover", // ให้ภาพครอบคลุมกรอบโดยไม่ผิดเพี้ยน
-                    objectPosition: "center"
+                    width: "120px",
+                    height: "160px",
+                    objectFit: "cover",
+                    objectPosition: "center",
                 }}
             />
         </div>
     );
-};
+});
