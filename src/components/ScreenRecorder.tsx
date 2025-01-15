@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle } from "react";
+import React, { useRef, useEffect, useState, useImperativeHandle } from "react";
 
 type RecorderOptions = {
   frameRate?: number;
