@@ -28,18 +28,15 @@ export const Camera = forwardRef<HTMLVideoElement>((_, ref) => {
                 setConstraints(videoConstraints);
                 setMirrored(true);
                 mediaStream.getTracks().forEach((track) => track.stop());
-            } catch (error) {
+            } catch {
+                // ใช้ fallback constraints ในกรณีที่เกิดข้อผิดพลาด
                 setConstraints(fallbackConstraints);
                 setMirrored(true);
             }
         };
 
         const handleOrientationChange = () => {
-            if (window.innerHeight > window.innerWidth) {
-                setIsPortrait(true);
-            } else {
-                setIsPortrait(false);
-            }
+            setIsPortrait(window.innerHeight > window.innerWidth);
         };
 
         checkCamera();
@@ -73,3 +70,8 @@ export const Camera = forwardRef<HTMLVideoElement>((_, ref) => {
         </div>
     );
 });
+
+// กำหนด displayName ให้คอมโพเนนต์
+Camera.displayName = "Camera";
+
+export default Camera;

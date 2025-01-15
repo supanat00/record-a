@@ -86,7 +86,6 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
             ctx.save(); // บันทึกสถานะ context
 
             const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
 
             // ขนาดและอัตราส่วนของกล้อง
             const cameraWidth = canvasWidth * 0.2; // 20% ของความกว้างจอ
