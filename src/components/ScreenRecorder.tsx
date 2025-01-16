@@ -14,7 +14,7 @@ type ScreenRecorderProps = {
   cameraRef: React.RefObject<HTMLVideoElement | null>;
   imageSrc: string;
   roomId: string;
-  isIncomingCallVisible: boolean;
+  isAcceptPressed: boolean; // รับค่าจาก LiveContent
   options?: RecorderOptions;
   ref: React.Ref<unknown> | undefined
 };
@@ -24,7 +24,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
   cameraRef,
   imageSrc,
   roomId,
-  isIncomingCallVisible,
+  isAcceptPressed, // รับค่าจาก Props
   ref,
   options = {
     frameRate: 60,
@@ -34,13 +34,15 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
     videoBitsPerSecond: 2_500_000,
   },
 }) => {
-  const [isRecording, setIsRecording] = useState(false);
+  // const [isRecording, setIsRecording] = useState(false);
+  const [showStartButton, setShowStartButton] = useState(true);
   const [videoURL, setVideoURL] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+  // const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+
 
   // เปิดให้ LiveContent ควบคุมผ่าน ref
   useImperativeHandle(ref, () => ({
@@ -179,8 +181,6 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
 
             ctx.restore(); // คืนค่าที่บันทึกไว้
           }
-
-
           requestAnimationFrame(drawDynamicElements);
         };
 
@@ -189,7 +189,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
       .catch((error) => {
         console.error("Failed to load background image:", error);
       });
-  }, [imageSrc, displayName, videoRef]);
+  }, [imageSrc, displayName, videoRef, cameraRef, drawStaticElements]);
 
   // ฟังก์ชันการบันทึกหน้าจอใน canvas
   const startRecording = async () => {
@@ -258,30 +258,46 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
       };
 
       mediaRecorder.start();
-      setIsRecording(true);
     } catch (err) {
       console.error("Error starting canvas recording:", err);
     }
+    // setIsRecording(true);
+    setShowStartButton(false); // ซ่อนปุ่มและ div หลังจากเริ่มบันทึก
   };
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
-    setIsRecording(false);
 
     videoRef.current?.pause();
     videoRef.current!.currentTime = 0;
+    // setIsRecording(false);
   };
 
   return (
-    <div className="absolute z-50 flex flex-col items-center">
-      <button
-        onClick={isRecording ? stopRecording : startRecording}
-        className={`px-6 py-2 text-white rounded-full ${isRecording ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
-          }`}
-      >
-        {isRecording ? "Stop Recording" : "Start Recording"}
-      </button>
+    <div className="absolute z-50 flex flex-col items-center w-full h-full">
+      {/* ปุ่มที่ 1: ปุ่ม Start Recording */}
+      {showStartButton && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg border">
+          <p className="text-lg text-center mb-4">กดปุ่ม &quot;OK&quot; เพื่อเริ่มเล่น</p>
+          <button
+            onClick={startRecording} // กดแล้วจะเริ่มบันทึกและซ่อน div นี้
+            className="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 focus:outline-none"
+          >
+            OK
+          </button>
+        </div>
+      )}
 
+
+      {/* ปุ่มที่ 2: Stop Recording */}
+      {isAcceptPressed && (
+        <button
+          onClick={stopRecording}
+          className="absolute bottom-10 right-10 w-16 h-16 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 focus:outline-none"
+        >
+          Stop
+        </button>
+      )}
       {videoURL && (
         <div className="flex flex-col items-center">
           <video

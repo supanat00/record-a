@@ -17,7 +17,7 @@ export default function LiveContent({
 }: LiveContentProps) {
     const cameraRef = useRef<HTMLVideoElement>(null);
     const screenRecorderRef = useRef<{ playVideo: () => void } | null>(null);
-    const [isIncomingCallVisible, setIsIncomingCallVisible] = useState(true);
+    const [isAcceptPressed, setIsAcceptPressed] = useState(false); // เพิ่มสถานะเพื่อตรวจสอบการกด Accept
 
     return (
         <section className="relative flex justify-center items-center w-full h-screen">
@@ -27,7 +27,7 @@ export default function LiveContent({
                 cameraRef={cameraRef}
                 imageSrc={imageSrc}
                 roomId={roomId}
-                isIncomingCallVisible={isIncomingCallVisible}
+                isAcceptPressed={isAcceptPressed} // ส่งสถานะ Accept ไปยัง ScreenRecorder
                 options={{ frameRate: 60, mimeType: "video/webm", audio: true }}
             />
             <IncomingCallScreen
@@ -35,7 +35,7 @@ export default function LiveContent({
                 videoSrc={videoSrc}
                 roomId={roomId}
                 onAccept={() => {
-                    setIsIncomingCallVisible(false); // ปิด IncomingCallScreen
+                    setIsAcceptPressed(true); // อัปเดตสถานะเมื่อกด Accept
                     screenRecorderRef.current?.playVideo(); // เล่นวิดีโอใน ScreenRecorder
                 }}
                 onReject={() => console.log("Call Rejected")}
