@@ -1,4 +1,3 @@
-// LivePage.tsx (Server Component)
 import LiveContent from "@/components/LiveContent";
 
 type Params = Promise<{ roomId: string }>;

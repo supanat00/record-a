@@ -29,7 +29,7 @@ export default function LiveContent({
                 roomId={roomId}
                 isIncomingCallVisible={isIncomingCallVisible}
                 options={{ frameRate: 60, mimeType: "video/webm", audio: true }}
-            />;
+            />
             <IncomingCallScreen
                 imageSrc={imageSrc}
                 videoSrc={videoSrc}

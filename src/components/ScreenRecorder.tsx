@@ -67,15 +67,60 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
 
   const displayName = names[parseInt(roomId, 10) - 1];
 
+  // ย้ายฟังก์ชัน drawStaticElements มาไว้ใน scope หลักของ component
+  const drawStaticElements = (ctx: CanvasRenderingContext2D, backgroundImage: HTMLImageElement) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    const scale = Math.max(canvas.width / backgroundImage.width, canvas.height / backgroundImage.height);
+    const scaledWidth = backgroundImage.width * scale;
+    const scaledHeight = backgroundImage.height * scale;
+    ctx.drawImage(
+      backgroundImage,
+      (canvas.width - scaledWidth) / 2,
+      (canvas.height - scaledHeight) / 2,
+      scaledWidth,
+      scaledHeight
+    );
+    ctx.restore();
+
+    // วาดข้อความ
+    ctx.fillStyle = "white";
+    ctx.font = "20px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(displayName, canvas.width / 2, 60);
+    ctx.font = "10px Arial";
+    ctx.fillStyle = "gray";
+    ctx.fillText("Incoming Call...", canvas.width / 2, 80);
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctxRef.current = ctx;
+    if (!canvas) return;
 
-        const draw = () => {
-          // วาดวิดีโอหลัก
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const loadBackgroundImage = (): Promise<HTMLImageElement> => {
+      return new Promise((resolve, reject) => {
+        const backgroundImage = new Image();
+        backgroundImage.src = imageSrc;
+        backgroundImage.onload = () => resolve(backgroundImage);
+        backgroundImage.onerror = reject;
+      });
+    };
+
+    loadBackgroundImage()
+      .then((backgroundImage) => {
+        drawStaticElements(ctx, backgroundImage);
+
+        const drawDynamicElements = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawStaticElements(ctx, backgroundImage); // วาดภาพพื้นหลังและข้อความซ้ำ
+
+          // วาดวิดีโอถ้ามี
           const mainVideo = videoRef.current;
           if (mainVideo) {
             ctx.drawImage(mainVideo, 0, 0, canvas.width, canvas.height);
@@ -85,75 +130,68 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
           if (cameraRef?.current) {
             ctx.save(); // บันทึกสถานะ context
 
-            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
 
-            // ขนาดและอัตราส่วนของกล้อง
-            const cameraWidth = canvasWidth * 0.2; // 20% ของความกว้างจอ
-            const cameraHeight = (cameraWidth / 3) * 4; // อัตราส่วน 3:4
+            // ขนาดของกรอบ (4:3 ในแนวตั้ง)
+            const cameraHeight = canvasHeight * 0.2; // 20% ของความสูงจอ
+            const cameraWidth = (cameraHeight / 4) * 3; // อัตราส่วน 4:3
+
+            // ขนาดและอัตราส่วนของกล้องจริง
+            const videoWidth = cameraRef.current.videoWidth || 1;
+            const videoHeight = cameraRef.current.videoHeight || 1;
+            const aspectRatio = videoWidth / videoHeight;
+
+            // คำนวณการครอบ (Crop) เพื่อให้ภาพเต็มกรอบ
+            let sourceWidth, sourceHeight, sourceX, sourceY;
+            if (aspectRatio > 3 / 4) {
+              // ภาพกว้างเกินไป (Crop ด้านซ้าย-ขวา)
+              sourceHeight = videoHeight;
+              sourceWidth = sourceHeight * (3 / 4); // กรอบ 4:3
+              sourceX = (videoWidth - sourceWidth) / 2; // กึ่งกลางแนวนอน
+              sourceY = 0;
+            } else {
+              // ภาพสูงเกินไป (Crop ด้านบน-ล่าง)
+              sourceWidth = videoWidth;
+              sourceHeight = sourceWidth / (3 / 4); // กรอบ 4:3
+              sourceX = 0;
+              sourceY = (videoHeight - sourceHeight) / 2; // กึ่งกลางแนวตั้ง
+            }
 
             // ตำแหน่งมุมขวาบน
-            const cameraX = canvasWidth - cameraWidth - 10; // เว้นขอบ 20px จากขวา
-            const cameraY = 10; // เว้นขอบ 20px จากบน
+            const cameraX = canvas.width - cameraWidth - 10; // เว้นขอบ 10px จากขวา
+            const cameraY = 10; // เว้นขอบ 10px จากบน
 
             ctx.translate(cameraX + cameraWidth, cameraY); // ย้ายไปตำแหน่งที่ต้องการ
             ctx.scale(-1, 1); // กลับด้านในแกน x
-            ctx.drawImage(cameraRef.current, 0, 0, cameraWidth, cameraHeight); // วาดกล้อง
+
+            // วาดภาพจากกล้องแบบครอบ (Crop) ให้เต็มกรอบ 4:3
+            ctx.drawImage(
+              cameraRef.current,
+              sourceX,
+              sourceY,
+              sourceWidth,
+              sourceHeight,
+              0,
+              0,
+              cameraWidth,
+              cameraHeight
+            );
+
             ctx.restore(); // คืนค่าที่บันทึกไว้
           }
 
-          // ภาพพื้นหลังหน้าจอโทรเข้า
-          // Draw incoming call UI if visible
-          if (isIncomingCallVisible) {
-            const backgroundImage = new Image();
-            backgroundImage.src = imageSrc;
-            backgroundImage.onload = () => {
-              ctx.save();
-              ctx.globalAlpha = 0.5;
 
-              const imgWidth = backgroundImage.width;
-              const imgHeight = backgroundImage.height;
-              const canvasWidth = canvas.width;
-              const canvasHeight = canvas.height;
-
-              const scale = Math.max(
-                canvasWidth / imgWidth,
-                canvasHeight / imgHeight
-              );
-              const scaledWidth = imgWidth * scale;
-              const scaledHeight = imgHeight * scale;
-              const offsetX = (canvasWidth - scaledWidth) / 2;
-              const offsetY = (canvasHeight - scaledHeight) / 2;
-
-              ctx.drawImage(
-                backgroundImage,
-                offsetX,
-                offsetY,
-                scaledWidth,
-                scaledHeight
-              );
-
-              ctx.restore();
-            };
-
-            ctx.fillStyle = "white";
-            ctx.font = "20px Arial";
-            ctx.textAlign = "center";
-            ctx.fillText(displayName, canvas.width / 2, 60);
-
-            ctx.font = "10px Arial";
-            ctx.fillStyle = "gray";
-            ctx.fillText("Incoming Call...", canvas.width / 2, 80);
-          }
-
-          requestAnimationFrame(draw);
+          requestAnimationFrame(drawDynamicElements);
         };
 
-        draw();
-      }
-    }
-  }, [videoSrc, cameraRef, imageSrc, displayName, isIncomingCallVisible]);
+        drawDynamicElements();
+      })
+      .catch((error) => {
+        console.error("Failed to load background image:", error);
+      });
+  }, [imageSrc, displayName, videoRef]);
 
-
+  // ฟังก์ชันการบันทึกหน้าจอใน canvas
   const startRecording = async () => {
     try {
       const canvas = canvasRef.current;
@@ -162,7 +200,20 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
         return;
       }
 
-      // รอให้ canvas เตรียมพร้อม
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        console.error("Canvas context not found.");
+        return;
+      }
+
+      // โหลดและวาดภาพพื้นหลัง
+      const backgroundImage = new Image();
+      backgroundImage.src = imageSrc;
+      backgroundImage.onload = () => {
+        drawStaticElements(ctx, backgroundImage);
+      };
+
+      // รอให้เฟรมแรกถูกวาด
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // สร้าง MediaStream จาก canvas
@@ -235,7 +286,8 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
         <div className="flex flex-col items-center">
           <video
             src={videoURL}
-            controls
+            autoPlay
+            loop
             className="relative w-full max-w-lg rounded-lg shadow-lg"
           />
           <a
@@ -250,8 +302,8 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
 
       <canvas
         ref={canvasRef}
-        width={1080}
-        height={1920}
+        width={720}
+        height={1280}
         className="hidden border border-gray-300"
       />
 
@@ -259,8 +311,6 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
         ref={videoRef}
         src={videoSrc}
         className="hidden"
-        playsInline
-        loop
       />
     </div>
   );
