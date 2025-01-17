@@ -303,6 +303,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
           <video
             src={videoURL}
             autoPlay
+            playsInline
             loop
             className="relative w-full max-w-lg rounded-lg shadow-lg"
           />
@@ -327,6 +328,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
         ref={videoRef}
         src={videoSrc}
         className="hidden"
+        playsInline
       />
     </div>
   );
