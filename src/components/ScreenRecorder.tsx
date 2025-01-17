@@ -189,7 +189,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
       .catch((error) => {
         console.error("Failed to load background image:", error);
       });
-  }, [imageSrc, displayName, videoRef, cameraRef, drawStaticElements]);
+  }, [imageSrc, displayName, videoRef, cameraRef, drawStaticElements, videoURL]);
 
   // ฟังก์ชันการบันทึกหน้าจอใน canvas
   const startRecording = async () => {
@@ -252,7 +252,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
 
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunks, { type: options.mimeType });
-        const url = URL.createObjectURL(blob);
+        const url = window.URL.createObjectURL(blob);
         setVideoURL(url);
         chunks = [];
       };
@@ -304,6 +304,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
             src={videoURL}
             autoPlay
             playsInline
+            muted
             loop
             className="block relative w-full max-w-lg rounded-lg shadow-lg"
           />
