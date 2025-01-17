@@ -28,7 +28,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
   ref,
   options = {
     frameRate: 60,
-    mimeType: "video/webm",
+    mimeType: "video/mp4",
     audio: true,
     audioBitsPerSecond: 2_500_000,
     videoBitsPerSecond: 2_500_000,
@@ -310,7 +310,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
           />
           <a
             href={videoURL}
-            download="video.webm"
+            download="video.mp4"
             className="absolute top-1/2 inline-block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition"
           >
             Download Video

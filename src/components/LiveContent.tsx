@@ -28,7 +28,7 @@ export default function LiveContent({
                 imageSrc={imageSrc}
                 roomId={roomId}
                 isAcceptPressed={isAcceptPressed} // ส่งสถานะ Accept ไปยัง ScreenRecorder
-                options={{ frameRate: 60, mimeType: "video/webm", audio: true }}
+                options={{ frameRate: 60, mimeType: "video/mp4", audio: true }}
             />
             <IncomingCallScreen
                 imageSrc={imageSrc}
