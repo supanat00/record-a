@@ -23,11 +23,8 @@ export default function App() {
         // ตรวจสอบสถานะการล็อกอิน
         if (liff.isLoggedIn()) {
           setIsLoggedIn(true); // หากล็อกอินแล้ว
-          // บันทึกสถานะการล็อกอินใน LocalStorage
-          localStorage.setItem('isLoggedIn', 'true');
         } else {
-          // ถ้ายังไม่ล็อกอิน, ล็อกอิน
-          liff.login();
+          liff.login(); // หากยังไม่ได้ล็อกอิน ให้ทำการล็อกอิน
         }
       } catch (error) {
         if (error instanceof Error) {
@@ -38,13 +35,7 @@ export default function App() {
       }
     };
 
-    // ตรวจสอบสถานะการล็อกอินจาก LocalStorage ก่อน
-    const loggedInStatus = localStorage.getItem('isLoggedIn');
-    if (loggedInStatus === 'true') {
-      setIsLoggedIn(true);
-    } else {
-      loadLiff(); // ถ้าไม่ได้ล็อกอิน, ทำการเรียกฟังก์ชัน loadLiff()
-    }
+    loadLiff();
   }, [liffId]); // เพิ่ม liffId ใน dependency เพื่อให้ทำงานทุกครั้งที่ค่า liffId เปลี่ยนแปลง
 
   if (!isLoggedIn) {
