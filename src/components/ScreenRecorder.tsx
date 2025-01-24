@@ -1,5 +1,15 @@
 "use client";
 import React, { useRef, useEffect, useState, useImperativeHandle } from "react";
+import AWS from "aws-sdk";
+import { S3 } from "aws-sdk";
+
+const s3 = new S3({
+  region: process.env.AWS_REGION || "",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+  },
+});
 
 type RecorderOptions = {
   frameRate?: number;
@@ -37,6 +47,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
   // const [isRecording, setIsRecording] = useState(false);
   const [showStartButton, setShowStartButton] = useState(true);
   const [videoURL, setVideoURL] = useState<string | null>(null);
+  const [fileUpload, setFileUpload]: any = useState(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -250,11 +261,15 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
         if (event.data.size > 0) chunks.push(event.data);
       };
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         const blob = new Blob(chunks, { type: options.mimeType });
         const url = window.URL.createObjectURL(blob);
         setVideoURL(url);
         chunks = [];
+
+        // Convert Blob to File for upload
+        const fileUpload = new File([blob], "recorded-video.webm", { type: "video/webm" });
+        setFileUpload(fileUpload);
       };
 
       mediaRecorder.start();
@@ -271,6 +286,28 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
     videoRef.current?.pause();
     videoRef.current!.currentTime = 0;
     // setIsRecording(false);
+  };
+
+  const uploadToS3 = async (file: any) => {
+    try {
+      const uploadParams = {
+        Bucket: process.env.S3_BUCKET_NAME || "",
+        Key: `video/${Date.now()}_${file.name}`,
+        Body: file,
+        ContentType: file.type,
+      };
+    
+      try {
+        const result = await s3.upload(uploadParams).promise();
+        console.log("File uploaded successfully:", result);
+        alert("File upload success");
+      } catch (err) {
+        console.error("Error uploading file:", err);
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("File upload failed");
+    }
   };
 
   return (
@@ -310,13 +347,18 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
           <a
             href={videoURL}
             download="video.webm"
-            className="absolute top-1/2 inline-block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition"
+            className="absolute top-4 inline-block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition"
           >
             Download Video
           </a>
+          <a
+            onClick={() => { uploadToS3(fileUpload) }}
+            className="absolute top-1/2 inline-block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition"
+          >
+            Upload Video
+          </a>
         </div>
       )}
-
       <canvas
         ref={canvasRef}
         width={720}
