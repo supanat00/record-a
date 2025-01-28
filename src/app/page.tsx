@@ -31,8 +31,7 @@ export default function App() {
         // เริ่มต้น LIFF
         await liff.init({ liffId });
         const profile = await liff.getProfile()
-        console.log(profile)
-        console.log(profile.userId)
+        console.log(profile, profile.userId)
 
         // ตรวจสอบสถานะการล็อกอิน
         if (liff.isLoggedIn()) {
