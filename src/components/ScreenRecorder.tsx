@@ -1,6 +1,5 @@
 "use client";
 import React, { useRef, useEffect, useState, useImperativeHandle } from "react";
-import AWS from "aws-sdk";
 import { S3 } from "aws-sdk";
 
 const s3 = new S3({
