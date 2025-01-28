@@ -7,7 +7,7 @@ export default function App() {
   // ถ้าไม่ได้กำหนด liffId จะใช้ค่าเป็น string ว่าง
   const liffId = process.env.NEXT_PUBLIC_LIFF_ID || '';
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isInLine, setIsInLine] = useState(false);
+  // const [isInLine, setIsInLine] = useState(false);
   // สถานะการเปิดใน LINE
 
   useEffect(() => {
