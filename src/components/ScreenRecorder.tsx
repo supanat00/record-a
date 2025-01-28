@@ -1,5 +1,8 @@
 "use client";
 import React, { useRef, useEffect, useState, useImperativeHandle } from "react";
+import { useRouter } from "next/navigation";
+
+import AcceptRejectButtons from "@/components/ui/AcceptRejectButtons";
 
 type RecorderOptions = {
   frameRate?: number;
@@ -35,6 +38,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
   },
 }) => {
   // const [isRecording, setIsRecording] = useState(false);
+  const router = useRouter();
   const [showStartButton, setShowStartButton] = useState(true);
   const [videoURL, setVideoURL] = useState<string | null>(null);
 
@@ -277,15 +281,17 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
     <div className="absolute z-50 flex flex-col items-center w-full h-full">
       {/* ปุ่มที่ 1: ปุ่ม Start Recording */}
       {showStartButton && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg border">
-          <p className="text-lg text-center mb-4">กดปุ่ม &quot;OK&quot; เพื่อเริ่มเล่น</p>
-          <button
-            onClick={startRecording} // กดแล้วจะเริ่มบันทึกและซ่อน div นี้
-            className="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 focus:outline-none"
-          >
-            OK
-          </button>
+        <div className="absolute w-max top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg border text-center">
+          <p className="text-xs mb-4">
+            ระบบจะทำการบันทึกวิดีโอของคุณอัตโนมัติ <br />
+            และตัดสิทธิ์การเล่นของคุณจำนวน 1 สิทธิ์ <br />
+            กดปุ่ม <strong>"ยอมรับ"</strong> เพื่อเริ่ม
+          </p>
+          <div className="flex justify-center space-x-4">
+            <AcceptRejectButtons onAccept={startRecording} />
+          </div>
         </div>
+
       )}
 
 
