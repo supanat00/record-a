@@ -1,6 +1,6 @@
 "use client";
 import React, { useRef, useEffect, useState, useImperativeHandle } from "react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 
 import AcceptRejectButtons from "@/components/ui/AcceptRejectButtons";
 
@@ -38,7 +38,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
   },
 }) => {
   // const [isRecording, setIsRecording] = useState(false);
-  const router = useRouter();
+  // const router = useRouter();
   const [showStartButton, setShowStartButton] = useState(true);
   const [videoURL, setVideoURL] = useState<string | null>(null);
 
@@ -285,7 +285,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
           <p className="text-xs mb-4">
             ระบบจะทำการบันทึกวิดีโอของคุณอัตโนมัติ <br />
             และตัดสิทธิ์การเล่นของคุณจำนวน 1 สิทธิ์ <br />
-            กดปุ่ม <strong>"ยอมรับ"</strong> เพื่อเริ่ม
+            กดปุ่ม <strong>&quot;ยอมรับ&quot;</strong> เพื่อเริ่ม
           </p>
           <div className="flex justify-center space-x-4">
             <AcceptRejectButtons onAccept={startRecording} />
