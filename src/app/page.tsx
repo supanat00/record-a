@@ -1,3 +1,63 @@
+"use client";
+
+import { useEffect, useState } from 'react';
+import Menu from "@/components/menu";
+import { useUser } from "@/context/UserContext";
+
+export default function App() {
+  const liffId = process.env.NEXT_PUBLIC_LIFF_ID || '';
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { setUser } = useUser(); // ใช้ Context
+
+  useEffect(() => {
+    const loadLiff = async () => {
+      const liff = (await import('@line/liff')).default;
+      try {
+        if (!liffId) {
+          throw new Error('LIFF ID is missing');
+        }
+
+        await liff.init({ liffId });
+
+        if (liff.isLoggedIn()) {
+          setIsLoggedIn(true);
+          const profile = await liff.getProfile();
+
+          // แสดงผลใน console
+          // console.log(profile, profile.userId);
+
+          // อัพเดต Context
+          setUser({ displayName: profile.displayName, userId: profile.userId });
+        } else {
+          liff.login();
+        }
+      } catch (error) {
+        console.error('LIFF initialization error:', error instanceof Error ? error.message : error);
+      }
+    };
+
+    loadLiff();
+  }, [liffId, setUser]);
+
+  if (!isLoggedIn) {
+    return (
+      <div className="flex justify-center items-center w-full h-screen">
+        <p>กำลังเข้าสู่ระบบ...</p>
+      </div>
+    );
+  }
+
+  return (
+    <section className="relative flex justify-center items-center bg-backgroundImg bg-repeat bg-cover bg-bottom w-full h-screen p-4">
+      <Menu />
+    </section>
+  );
+}
+
+
+// Mobile Only
+
+{/* 
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -80,3 +140,4 @@ export default function App() {
     </section>
   );
 }
+*/}

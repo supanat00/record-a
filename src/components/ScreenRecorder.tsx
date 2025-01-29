@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useEffect, useState, useImperativeHandle } from "react";
 // import { useRouter } from "next/navigation";
-
+import { useUser } from "@/context/UserContext"; // Import Context
 import AcceptRejectButtons from "@/components/ui/AcceptRejectButtons";
 
 type RecorderOptions = {
@@ -47,6 +47,15 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
   // const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
+
+  // Liff Data
+  const { user } = useUser(); // ดึงข้อมูลผู้ใช้จาก Context
+
+  useEffect(() => {
+    if (user) {
+      console.log("User Profile:", user);
+    }
+  }, [user]);
 
   // เปิดให้ LiveContent ควบคุมผ่าน ref
   useImperativeHandle(ref, () => ({
