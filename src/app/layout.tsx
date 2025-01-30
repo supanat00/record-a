@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { UserProvider } from "@/context/UserContext";
 
 export const metadata: Metadata = {
   title: "Video Call Next App",
@@ -15,7 +16,9 @@ export default function RootLayout({
     <html lang="en">
       <body className="flex justify-center items-center h-full">
         <main className="w-full max-w-5xl h-screen">
-          {children}
+          <UserProvider>
+            {children}
+          </UserProvider>
         </main>
       </body>
     </html>

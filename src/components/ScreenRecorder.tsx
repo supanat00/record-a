@@ -9,6 +9,9 @@ const s3 = new S3({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
   },
 });
+// import { useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext"; // Import Context
+import AcceptRejectButtons from "@/components/ui/AcceptRejectButtons";
 
 type RecorderOptions = {
   frameRate?: number;
@@ -44,6 +47,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
   },
 }) => {
   // const [isRecording, setIsRecording] = useState(false);
+  // const router = useRouter();
   const [showStartButton, setShowStartButton] = useState(true);
   const [videoURL, setVideoURL] = useState<string | null>(null);
   const [fileUpload, setFileUpload]: any = useState(null);
@@ -53,6 +57,15 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
   // const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
+
+  // Liff Data
+  const { user } = useUser(); // ดึงข้อมูลผู้ใช้จาก Context
+
+  useEffect(() => {
+    if (user) {
+      console.log("User Profile:", user);
+    }
+  }, [user]);
 
   // เปิดให้ LiveContent ควบคุมผ่าน ref
   useImperativeHandle(ref, () => ({
@@ -313,15 +326,17 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
     <div className="absolute z-50 flex flex-col items-center w-full h-full">
       {/* ปุ่มที่ 1: ปุ่ม Start Recording */}
       {showStartButton && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg border">
-          <p className="text-lg text-center mb-4">กดปุ่ม &quot;OK&quot; เพื่อเริ่มเล่น</p>
-          <button
-            onClick={startRecording} // กดแล้วจะเริ่มบันทึกและซ่อน div นี้
-            className="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 focus:outline-none"
-          >
-            OK
-          </button>
+        <div className="absolute w-max top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg border text-center">
+          <p className="text-xs mb-4">
+            ระบบจะทำการบันทึกวิดีโอของคุณอัตโนมัติ <br />
+            และตัดสิทธิ์การเล่นของคุณจำนวน 1 สิทธิ์ <br />
+            กดปุ่ม <strong>&quot;ยอมรับ&quot;</strong> เพื่อเริ่ม
+          </p>
+          <div className="flex justify-center space-x-4">
+            <AcceptRejectButtons onAccept={startRecording} />
+          </div>
         </div>
+
       )}
 
 
