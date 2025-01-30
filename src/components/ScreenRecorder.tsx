@@ -50,7 +50,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
   // const router = useRouter();
   const [showStartButton, setShowStartButton] = useState(true);
   const [videoURL, setVideoURL] = useState<string | null>(null);
-  const [fileUpload, setFileUpload]: any = useState(null);
+  const [fileUpload, setFileUpload] = useState<File | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -300,7 +300,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
     // setIsRecording(false);
   };
 
-  const uploadToS3 = async (file: any) => {
+  const uploadToS3 = async (file: File) => {
     try {
       const uploadParams = {
         Bucket: process.env.S3_BUCKET_NAME || "",
@@ -366,7 +366,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
             Download Video
           </a>
           <a
-            onClick={() => { uploadToS3(fileUpload) }}
+            onClick={() => { if(fileUpload) uploadToS3(fileUpload) }}
             className="absolute top-1/2 inline-block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition"
           >
             Upload Video
