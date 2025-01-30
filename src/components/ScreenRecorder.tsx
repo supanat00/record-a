@@ -3,10 +3,10 @@ import React, { useRef, useEffect, useState, useImperativeHandle } from "react";
 import { S3 } from "aws-sdk";
 
 const s3 = new S3({
-  region: process.env.AWS_REGION || "",
+  region: process.env.NEXT_PUBLIC_AWS_REGION || '',
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+    accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY || '',
   },
 });
 // import { useRouter } from "next/navigation";
@@ -51,6 +51,7 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
   const [showStartButton, setShowStartButton] = useState(true);
   const [videoURL, setVideoURL] = useState<string | null>(null);
   const [fileUpload, setFileUpload] = useState<File | null>(null);
+  const [fileUploadStatus, setFileUploadStatus] = useState<boolean>(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -303,16 +304,18 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
   const uploadToS3 = async (file: File) => {
     try {
       const uploadParams = {
-        Bucket: process.env.S3_BUCKET_NAME || "",
-        Key: `video/${Date.now()}_${file.name}`,
+        Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME || '',
+        Key: `recordVideo/${user?.userId}_${user?.displayName}/${Date.now()}_${file.name}`,
         Body: file,
         ContentType: file.type,
       };
     
       try {
+        setFileUploadStatus(true);
         const result = await s3.upload(uploadParams).promise();
         console.log("File uploaded successfully:", result);
         alert("File upload success");
+        setFileUploadStatus(false);
       } catch (err) {
         console.error("Error uploading file:", err);
       }
@@ -365,12 +368,17 @@ export const ScreenRecorder: React.FC<ScreenRecorderProps> = ({
           >
             Download Video
           </a>
+          {!fileUploadStatus ?
           <a
             onClick={() => { if(fileUpload) uploadToS3(fileUpload) }}
             className="absolute top-1/2 inline-block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition"
           >
             Upload Video
+          </a> :
+          <a className="absolute top-1/2 inline-block bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition" aria-disabled>
+            Uploading...
           </a>
+          }
         </div>
       )}
       <canvas
